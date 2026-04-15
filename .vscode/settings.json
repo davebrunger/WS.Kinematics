@@ -1,6 +1,12 @@
 {
     "chat.tools.terminal.autoApprove": {
         "dotnet new": true,
-        "dotnet sln": true
+        "dotnet sln": true,
+        "Add-Type": true,
+        "Get-Member": true,
+        "dotnet build": true,
+        "dotnet test": true,
+        "Set-Content": true,
+        "Add-Content": true
     }
 }

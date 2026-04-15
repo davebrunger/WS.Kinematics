@@ -3,4 +3,7 @@
     <Project Path="src/WS.Kinematics/WS.Kinematics.csproj" />
     <Project Path="src/WS.Matrices/WS.Matrices.csproj" />
   </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/WS.Matrices.Tests/WS.Matrices.Tests.csproj" />
+  </Folder>
 </Solution>

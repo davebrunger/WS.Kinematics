@@ -25,7 +25,10 @@ namespace WS.Kinematics
         public Vector3D Normalize()
         {
             double mag = Magnitude;
-            if (mag == 0) throw new InvalidOperationException("Cannot normalize a zero vector.");
+            if (mag == 0)
+            {
+                throw new InvalidOperationException("Cannot normalize a zero vector.");
+            }
             return new Vector3D(X / mag, Y / mag, Z / mag);
         }
 

@@ -28,6 +28,7 @@
   <!-- SourceLink: maps PDB paths back to GitHub source -->
   <ItemGroup>
     <PackageReference Include="Microsoft.SourceLink.GitHub" Version="8.0.0" PrivateAssets="All" />
+    <PackageReference Include="WS.DomainModelling.Common" Version="1.0.15" />
   </ItemGroup>
 
   <ItemGroup>
