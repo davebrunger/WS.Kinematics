@@ -1,0 +1,6 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/WS.Kinematics/WS.Kinematics.csproj" />
+    <Project Path="src/WS.Matrices/WS.Matrices.csproj" />
+  </Folder>
+</Solution>
