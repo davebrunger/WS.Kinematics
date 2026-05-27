@@ -45,7 +45,7 @@ public class SquareMatrix<TDimension> : ISquareMatrix<TDimension, SquareMatrix<T
     /// <summary>Returns the element-wise sum of this matrix and <paramref name="other"/>.</summary>
     /// <param name="other">The matrix to add.</param>
     /// <returns>A new matrix containing the element-wise sum.</returns>
-    public SquareMatrix<TDimension> Add(SquareMatrix<TDimension> other) => new SquareMatrix<TDimension>(matrix.Add(other.matrix));
+    public SquareMatrix<TDimension> Add(SquareMatrix<TDimension> other) => new(matrix.Add(other.matrix));
 
     /// <summary>
     /// Determines whether this matrix is equal to <paramref name="other"/> by comparing all element values.
@@ -65,14 +65,21 @@ public class SquareMatrix<TDimension> : ISquareMatrix<TDimension, SquareMatrix<T
     /// </summary>
     /// <param name="scalar">The scalar value to multiply by.</param>
     /// <returns>A new matrix scaled by <paramref name="scalar"/>.</returns>
-    public SquareMatrix<TDimension> Multiply(double scalar) => new SquareMatrix<TDimension>(matrix.Multiply(scalar));
+    public SquareMatrix<TDimension> Multiply(double scalar) => new(matrix.Multiply(scalar));
 
     /// <summary>
     /// Returns the matrix product of this matrix and <paramref name="other"/>.
     /// </summary>
     /// <param name="other">The right-hand square matrix to multiply by.</param>
     /// <returns>A new matrix that is the product of this matrix and <paramref name="other"/>.</returns>
-    public SquareMatrix<TDimension> Multiply(SquareMatrix<TDimension> other) => new SquareMatrix<TDimension>(matrix.Multiply(other.matrix));
+    public SquareMatrix<TDimension> Multiply(SquareMatrix<TDimension> other) => new(matrix.Multiply(other.matrix));
+
+    /// <summary>
+    /// Returns the product of this matrix and a column vector, yielding a new vector.
+    /// </summary>
+    /// <param name="vector">The column vector to multiply by.</param>
+    /// <returns>A new <see cref="Vector{TDimension}"/> that is the result of multiplying this matrix by <paramref name="vector"/>.</returns>
+    public Vector<TDimension> Multiply(Vector<TDimension> vector) => matrix.Multiply(vector);
 
     /// <summary>
     /// Returns a new matrix with the specified cell replaced by <paramref name="value"/>.
@@ -87,7 +94,7 @@ public class SquareMatrix<TDimension> : ISquareMatrix<TDimension, SquareMatrix<T
     /// <summary>Returns the element-wise difference of this matrix minus <paramref name="other"/>.</summary>
     /// <param name="other">The matrix to subtract.</param>
     /// <returns>A new matrix containing the element-wise difference.</returns>
-    public SquareMatrix<TDimension> Subtract(SquareMatrix<TDimension> other) => new SquareMatrix<TDimension>(matrix.Subtract(other.matrix));
+    public SquareMatrix<TDimension> Subtract(SquareMatrix<TDimension> other) => new(matrix.Subtract(other.matrix));
 
     /// <inheritdoc/>
     public override string ToString() => matrix.ToString();
@@ -96,7 +103,7 @@ public class SquareMatrix<TDimension> : ISquareMatrix<TDimension, SquareMatrix<T
     /// Returns the transpose of this matrix, swapping rows and columns.
     /// </summary>
     /// <returns>A new <see cref="SquareMatrix{TDimension}"/> that is the transpose of this matrix.</returns>
-    public SquareMatrix<TDimension> Transpose() => new SquareMatrix<TDimension>(matrix.Transpose());
+    public SquareMatrix<TDimension> Transpose() => new(matrix.Transpose());
 
     /// <summary>Returns <see langword="true"/> if both matrices have identical element values.</summary>
     public static bool operator ==(SquareMatrix<TDimension> left, SquareMatrix<TDimension> right) => left.Equals(right);
@@ -112,6 +119,9 @@ public class SquareMatrix<TDimension> : ISquareMatrix<TDimension, SquareMatrix<T
 
     /// <summary>Returns a new matrix with every element of <paramref name="matrix"/> multiplied by <paramref name="scalar"/>.</summary>
     public static SquareMatrix<TDimension> operator *(SquareMatrix<TDimension> matrix, double scalar) => matrix.Multiply(scalar);
+
+    /// <summary>Returns the product of <paramref name="matrix"/> and <paramref name="vector"/>.</summary>
+    public static Vector<TDimension> operator *(SquareMatrix<TDimension> matrix, Vector<TDimension> vector) => matrix.Multiply(vector);
 
     /// <summary>Returns a new matrix with every element of <paramref name="matrix"/> multiplied by <paramref name="scalar"/>.</summary>
     public static SquareMatrix<TDimension> operator *(double scalar, SquareMatrix<TDimension> matrix) => matrix.Multiply(scalar);

@@ -166,6 +166,68 @@ public class SquareMatrixTests
     }
 
     // -------------------------------------------------------------------------
+    // Multiply (vector)
+    // -------------------------------------------------------------------------
+
+    [Fact]
+    public void MultiplyVector_ProducesCorrectProduct()
+    {
+        // [1 2] * [2] = [1*2+2*3] = [8]
+        // [3 4]   [3]   [3*2+4*3]   [18]
+        var sq = CreateSquareMatrix<Two>(new double[2, 2] { { 1, 2 }, { 3, 4 } });
+        var vector = CreateVector<Two>(2.0, 3.0);
+
+        var result = sq.Multiply(vector);
+
+        Assert.Equal(8.0, result[0].Match(v => v, _ => 0));
+        Assert.Equal(18.0, result[1].Match(v => v, _ => 0));
+    }
+
+    [Fact]
+    public void MultiplyVector_WithIdentityMatrix_ReturnsUnchangedVector()
+    {
+        var identity = CreateSquareMatrix<Three>(new double[3, 3]
+        {
+            { 1, 0, 0 },
+            { 0, 1, 0 },
+            { 0, 0, 1 }
+        });
+        var vector = CreateVector<Three>(4.0, -2.0, 7.0);
+
+        var result = identity.Multiply(vector);
+
+        Assert.Equal(4.0, result[0].Match(v => v, _ => 0));
+        Assert.Equal(-2.0, result[1].Match(v => v, _ => 0));
+        Assert.Equal(7.0, result[2].Match(v => v, _ => 0));
+    }
+
+    [Fact]
+    public void MultiplyVector_Rotation90Degrees_TransformsCorrectly()
+    {
+        // 90° rotation matrix applied to (1, 0) should give (0, 1)
+        var rotation = HomogeneousMatrices.Rotate(Math.PI / 2);
+        var vector = CreateVector<Three>(1.0, 0.0, 1.0); // homogeneous point
+
+        var result = rotation.Multiply(vector);
+
+        Assert.Equal(0.0, result[0].Match(v => v, _ => double.NaN), precision: 10);
+        Assert.Equal(1.0, result[1].Match(v => v, _ => double.NaN), precision: 10);
+        Assert.Equal(1.0, result[2].Match(v => v, _ => double.NaN), precision: 10);
+    }
+
+    [Fact]
+    public void MultiplyVectorOperator_ProducesCorrectProduct()
+    {
+        var matrix = CreateSquareMatrix<Two>(new double[2, 2] { { 1, 2 }, { 3, 4 } });
+        var vector = CreateVector<Two>(2.0, 3.0);
+
+        var result = matrix * vector;
+
+        Assert.Equal(8.0, result[0].Match(v => v, _ => 0));
+        Assert.Equal(18.0, result[1].Match(v => v, _ => 0));
+    }
+
+    // -------------------------------------------------------------------------
     // GetInverse — singular matrix
     // -------------------------------------------------------------------------
 
@@ -188,6 +250,18 @@ public class SquareMatrixTests
         where TColumns : Dimension
     {
         return Matrix.Create<TRows, TColumns>(values).Match(m => m, e => throw new InvalidOperationException(e));
+    }
+
+    private static SquareMatrix<TDimension> CreateSquareMatrix<TDimension>(double[,] values)
+        where TDimension : Dimension
+    {
+        return SquareMatrix.Create<TDimension>(values).Match(m => m, e => throw new InvalidOperationException(e));
+    }
+
+    private static Vector<TDimension> CreateVector<TDimension>(params double[] components)
+        where TDimension : Dimension
+    {
+        return Vector.Create<TDimension>(components).Match(v => v, e => throw new InvalidOperationException(e));
     }
 
     private static void AssertIsIdentity<TSize>(Matrix<TSize, TSize> matrix)

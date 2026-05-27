@@ -3,10 +3,31 @@ namespace WS.Matrices;
 /// <summary>
 /// Factory methods for constructing 2D homogeneous transformation matrices.
 /// All matrices are 3×3, using homogeneous coordinates to represent 2D affine transformations
-/// including rotations, translations, reflections, shears, squeezes, and stretches.
+/// including projections, reflections, rotations, shears, squeezes, stretches, and translations.
 /// </summary>
 public static class HomogeneousMatrices
 {
+    /// <summary>
+    /// Creates a 3×3 homogeneous orthogonal projection matrix that projects 2D points onto a line
+    /// through the origin in the direction of <paramref name="direction"/>.
+    /// The vector does not need to be normalised.
+    /// </summary>
+    /// <param name="direction">A 2D vector defining the direction of the projection line.</param>
+    /// <returns>A <see cref="SquareMatrix{Three}"/> representing the orthogonal projection.</returns>
+    public static SquareMatrix<Three> Project(Vector<Two> direction)
+    {
+        var x = direction[0].Match(v => v, _ => 0);
+        var y = direction[1].Match(v => v, _ => 0);
+        var lenSquared = x * x + y * y;
+
+        return new SquareMatrix<Three>(new double[,]
+        {
+            { x * x / lenSquared, x * y / lenSquared, 0 },
+            { x * y / lenSquared, y * y / lenSquared, 0 },
+            { 0,                  0,                  1 }
+        });
+    }
+
     /// <summary>
     /// Creates a 3×3 homogeneous reflection matrix across a line through the origin at the given angle.
     /// </summary>
@@ -132,5 +153,29 @@ public static class HomogeneousMatrices
             { 0, 1, translation[1].Match(v => v, _ => 0) },
             { 0, 0, 1 }
         });
+    }
+
+    /// <summary>
+    /// Applies a 3×3 homogeneous transformation matrix to a 2D point, returning the transformed point.
+    /// The input vector is treated as a homogeneous point with implicit w=1.
+    /// </summary>
+    /// <param name="matrix">The 3×3 homogeneous transformation matrix to apply.</param>
+    /// <param name="vector">The 2D point to transform.</param>
+    /// <returns>
+    /// A <see cref="Result{T,TError}"/> containing the transformed 2D point, or an error message
+    /// if the transformation produces an invalid homogeneous coordinate (w=0).
+    /// </returns>
+    public static Result<Vector<Two>, string> Apply(this SquareMatrix<Three> matrix, Vector<Two> vector)
+    {
+        var vector3 = new Vector<Three>([vector[0].Match(v => v, _ => 0), vector[1].Match(v => v, _ => 0), 1]);
+        var result3 = matrix.Multiply(vector3);
+        var w = result3[2].Match(v => v, _ => 1);
+
+        if (w == 0)
+        {
+            return "Transformation resulted in invalid homogeneous coordinate w=0.";
+        }
+
+        return new Vector<Two>([result3[0].Match(v => v, _ => 0) / w, result3[1].Match(v => v, _ => 0) / w]);
     }
 }

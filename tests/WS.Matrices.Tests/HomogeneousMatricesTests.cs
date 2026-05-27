@@ -1,6 +1,122 @@
 ﻿public class HomogeneousMatricesTests
 {
     // -------------------------------------------------------------------------
+    // Project
+    // -------------------------------------------------------------------------
+
+    [Fact]
+    public void Project_AlongXAxis_ProjectsOntoXAxis()
+    {
+        // Projecting (3, 4) onto x-axis direction → (3, 0)
+        var matrix = HomogeneousMatrices.Project(CreateVector<Two>(1.0, 0.0));
+        var point = CreateVector<Two>(3.0, 4.0);
+
+        var result = matrix.Apply(point);
+
+        result.Match(v =>
+        {
+            Assert.Equal(3.0, v[0].Match(x => x, _ => double.NaN), precision: 10);
+            Assert.Equal(0.0, v[1].Match(x => x, _ => double.NaN), precision: 10);
+            return v;
+        },
+        e => { Assert.Fail(e); return point; });
+    }
+
+    [Fact]
+    public void Project_AlongYAxis_ProjectsOntoYAxis()
+    {
+        // Projecting (3, 4) onto y-axis direction → (0, 4)
+        var matrix = HomogeneousMatrices.Project(CreateVector<Two>(0.0, 1.0));
+        var point = CreateVector<Two>(3.0, 4.0);
+
+        var result = matrix.Apply(point);
+
+        result.Match(v =>
+        {
+            Assert.Equal(0.0, v[0].Match(x => x, _ => double.NaN), precision: 10);
+            Assert.Equal(4.0, v[1].Match(x => x, _ => double.NaN), precision: 10);
+            return v;
+        },
+        e => { Assert.Fail(e); return point; });
+    }
+
+    [Fact]
+    public void Project_AlongDiagonal_ProjectsCorrectly()
+    {
+        // Projecting (3, 4) onto y=x direction: result = ((3+4)/2, (3+4)/2) = (3.5, 3.5)
+        var matrix = HomogeneousMatrices.Project(CreateVector<Two>(1.0, 1.0));
+        var point = CreateVector<Two>(3.0, 4.0);
+
+        var result = matrix.Apply(point);
+
+        result.Match(v =>
+        {
+            Assert.Equal(3.5, v[0].Match(x => x, _ => double.NaN), precision: 10);
+            Assert.Equal(3.5, v[1].Match(x => x, _ => double.NaN), precision: 10);
+            return v;
+        },
+        e => { Assert.Fail(e); return point; });
+    }
+
+    [Fact]
+    public void Project_DirectionScaleIsIrrelevant()
+    {
+        // Direction (2, 0) should produce the same matrix as (1, 0)
+        var unit = HomogeneousMatrices.Project(CreateVector<Two>(1.0, 0.0));
+        var scaled = HomogeneousMatrices.Project(CreateVector<Two>(2.0, 0.0));
+
+        Assert.Equal(unit, scaled);
+    }
+
+    [Fact]
+    public void Project_IsIdempotent_ApplyingTwiceGivesSameResult()
+    {
+        // P² = P for any projection matrix
+        var projection = HomogeneousMatrices.Project(CreateVector<Two>(2.0, 1.0));
+
+        var product = projection.Multiply(projection);
+
+        for (int i = 0; i < 3; i++)
+        {
+            for (int j = 0; j < 3; j++)
+            {
+                Assert.Equal(
+                    projection[i, j].Match(v => v, _ => double.NaN),
+                    product[i, j].Match(v => v, _ => double.NaN),
+                    precision: 10);
+            }
+        }
+    }
+
+    [Fact]
+    public void Project_MaintainsHomogeneousRow()
+    {
+        var matrix = HomogeneousMatrices.Project(CreateVector<Two>(3.0, 4.0));
+
+        Assert.Equal(0.0, matrix[2, 0].Match(v => v, _ => double.NaN), precision: 10);
+        Assert.Equal(0.0, matrix[2, 1].Match(v => v, _ => double.NaN), precision: 10);
+        Assert.Equal(1.0, matrix[2, 2].Match(v => v, _ => double.NaN), precision: 10);
+    }
+
+    [Fact]
+    public void Project_PointOnLine_IsUnchanged()
+    {
+        // A point already on the projection line should be unchanged
+        var matrix = HomogeneousMatrices.Project(CreateVector<Two>(1.0, 0.0));
+        var point = CreateVector<Two>(5.0, 0.0);
+
+        var result = matrix.Apply(point);
+
+        result.Match(v =>
+        {
+            Assert.Equal(5.0, v[0].Match(x => x, _ => double.NaN), precision: 10);
+            Assert.Equal(0.0, v[1].Match(x => x, _ => double.NaN), precision: 10);
+            return v;
+        },
+        e => { Assert.Fail(e); return point; });
+    }
+
+    // -------------------------------------------------------------------------
     // Reflect
     // -------------------------------------------------------------------------
 
@@ -433,6 +549,102 @@
         Assert.Equal(0.0, matrix[0, 1].Match(v => v, _ => double.NaN), precision: 10);
         Assert.Equal(0.0, matrix[1, 0].Match(v => v, _ => double.NaN), precision: 10);
         Assert.Equal(1.0, matrix[1, 1].Match(v => v, _ => double.NaN), precision: 10);
+    }
+
+    // -------------------------------------------------------------------------
+    // Apply
+    // -------------------------------------------------------------------------
+
+    [Fact]
+    public void Apply_WithTranslation_TranslatesPoint()
+    {
+        var translate = HomogeneousMatrices.Translate(CreateVector<Two>(3.0, 5.0));
+        var point = CreateVector<Two>(1.0, 2.0);
+
+        var result = translate.Apply(point);
+
+        Assert.True(result.IsSuccess);
+        result.Match(v =>
+        {
+            Assert.Equal(4.0, v[0].Match(x => x, _ => double.NaN), precision: 10);
+            Assert.Equal(7.0, v[1].Match(x => x, _ => double.NaN), precision: 10);
+            return v;
+        },
+        e => { Assert.Fail(e); return point; });
+    }
+
+    [Fact]
+    public void Apply_WithRotation90Degrees_RotatesPoint()
+    {
+        // Rotating (1, 0) by 90° counter-clockwise → (0, 1)
+        var rotate = HomogeneousMatrices.Rotate(Math.PI / 2);
+        var point = CreateVector<Two>(1.0, 0.0);
+
+        var result = rotate.Apply(point);
+
+        Assert.True(result.IsSuccess);
+        result.Match(v =>
+        {
+            Assert.Equal(0.0, v[0].Match(x => x, _ => double.NaN), precision: 10);
+            Assert.Equal(1.0, v[1].Match(x => x, _ => double.NaN), precision: 10);
+            return v;
+        },
+        e => { Assert.Fail(e); return point; });
+    }
+
+    [Fact]
+    public void Apply_WithComposedTransform_AppliesRotationThenTranslation()
+    {
+        // Rotate 90° then translate by (1, 2): point (1,0) → rotate → (0,1) → translate → (1, 3)
+        var transform = HomogeneousMatrices.Translate(CreateVector<Two>(1.0, 2.0))
+            .Multiply(HomogeneousMatrices.Rotate(Math.PI / 2));
+        var point = CreateVector<Two>(1.0, 0.0);
+
+        var result = transform.Apply(point);
+
+        Assert.True(result.IsSuccess);
+        result.Match(v =>
+        {
+            Assert.Equal(1.0, v[0].Match(x => x, _ => double.NaN), precision: 10);
+            Assert.Equal(3.0, v[1].Match(x => x, _ => double.NaN), precision: 10);
+            return v;
+        },
+        e => { Assert.Fail(e); return point; });
+    }
+
+    [Fact]
+    public void Apply_WithIdentityMatrix_ReturnsOriginalPoint()
+    {
+        var identity = HomogeneousMatrices.Rotate(0.0);
+        var point = CreateVector<Two>(7.0, -3.0);
+
+        var result = identity.Apply(point);
+
+        Assert.True(result.IsSuccess);
+        result.Match(v =>
+        {
+            Assert.Equal(7.0, v[0].Match(x => x, _ => double.NaN), precision: 10);
+            Assert.Equal(-3.0, v[1].Match(x => x, _ => double.NaN), precision: 10);
+            return v;
+        },
+        e => { Assert.Fail(e); return point; });
+    }
+
+    [Fact]
+    public void Apply_WithZeroHomogeneousCoordinate_ReturnsError()
+    {
+        // Construct a matrix whose bottom row is [0,0,0], forcing w=0
+        var matrix = SquareMatrix.Create<Three>(new double[,]
+        {
+            { 1, 0, 0 },
+            { 0, 1, 0 },
+            { 0, 0, 0 }
+        }).Match(m => m, e => throw new InvalidOperationException(e));
+        var point = CreateVector<Two>(1.0, 1.0);
+
+        var result = matrix.Apply(point);
+
+        Assert.True(result.IsError);
     }
 
     // -------------------------------------------------------------------------

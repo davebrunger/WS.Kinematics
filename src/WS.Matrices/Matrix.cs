@@ -152,6 +152,27 @@ public class Matrix<TRows, TColumns> : IMatrix<TRows, TColumns, Matrix<TRows, TC
     }
 
     /// <summary>
+    /// Returns the product of this matrix and a column vector, yielding a new vector.
+    /// </summary>
+    /// <param name="other">The column vector to multiply by. Its dimension must match the number of columns in this matrix.</param>
+    /// <returns>A new <see cref="Vector{TRows}"/> that is the result of multiplying this matrix by <paramref name="other"/>.</returns>
+    public Vector<TRows> Multiply(Vector<TColumns> other)
+    {
+        var array = new double[Columns, 1];
+        for (int i = 0; i < Columns; i++)
+        {
+            array[i, 0] = other[i].Match(v => v, _ => 0);
+        }
+        var columnMatrix = Multiply(new Matrix<TColumns, One>(array));
+        var resultArray = new double[Rows];
+        for (int i = 0; i < Rows; i++)
+        {
+            resultArray[i] = columnMatrix[i, 0].Match(v => v, _ => 0);
+        }
+        return new Vector<TRows>(resultArray);
+    }
+
+    /// <summary>
     /// Returns a new matrix with the specified cell replaced by <paramref name="value"/>.
     /// The original matrix is not modified.
     /// </summary>
@@ -236,6 +257,9 @@ public class Matrix<TRows, TColumns> : IMatrix<TRows, TColumns, Matrix<TRows, TC
 
     /// <summary>Returns a new matrix with every element of <paramref name="matrix"/> multiplied by <paramref name="scalar"/>.</summary>
     public static Matrix<TRows, TColumns> operator *(Matrix<TRows, TColumns> matrix, double scalar) => matrix.Multiply(scalar);
+
+    /// <summary>Returns the product of <paramref name="matrix"/> and <paramref name="vector"/>.</summary>
+    public static Vector<TRows> operator *(Matrix<TRows, TColumns> matrix, Vector<TColumns> vector) => matrix.Multiply(vector);
 
     /// <summary>Returns a new matrix with every element of <paramref name="matrix"/> multiplied by <paramref name="scalar"/>.</summary>
     public static Matrix<TRows, TColumns> operator *(double scalar, Matrix<TRows, TColumns> matrix) => matrix.Multiply(scalar);

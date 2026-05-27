@@ -1,6 +1,6 @@
 namespace WS.Kinematics.Models;
 
-public record Transform2D(Point2D Point, AngleRadians2D Rotation, Vector2D Velocity, AngleRadians2D AngularVelocity)
+public record Transform2D(Point2D Point, AngleRadians Rotation, Vector2D Velocity, AngleRadians AngularVelocity)
 {
     public Point2D Translate(Point2D localPoint)
     {

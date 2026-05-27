@@ -312,6 +312,75 @@ public class MatrixTests
     }
 
     // -------------------------------------------------------------------------
+    // Multiply (vector)
+    // -------------------------------------------------------------------------
+
+    [Fact]
+    public void MultiplyVector_ProducesCorrectProduct()
+    {
+        // [1 2] * [2] = [1*2+2*3] = [8]
+        // [3 4]   [3]   [3*2+4*3]   [18]
+        var matrix = CreateMatrix<Two, Two>(new double[2, 2] { { 1, 2 }, { 3, 4 } });
+        var vector = CreateVector<Two>(2.0, 3.0);
+
+        var result = matrix.Multiply(vector);
+
+        Assert.Equal(8.0, result[0].Match(v => v, _ => 0));
+        Assert.Equal(18.0, result[1].Match(v => v, _ => 0));
+    }
+
+    [Fact]
+    public void MultiplyVector_WithIdentityMatrix_ReturnsUnchangedVector()
+    {
+        var identity = CreateMatrix<Three, Three>(new double[3, 3]
+        {
+            { 1, 0, 0 },
+            { 0, 1, 0 },
+            { 0, 0, 1 }
+        });
+        var vector = CreateVector<Three>(5.0, -3.0, 2.0);
+
+        var result = identity.Multiply(vector);
+
+        Assert.Equal(5.0, result[0].Match(v => v, _ => 0));
+        Assert.Equal(-3.0, result[1].Match(v => v, _ => 0));
+        Assert.Equal(2.0, result[2].Match(v => v, _ => 0));
+    }
+
+    [Fact]
+    public void MultiplyVector_NonSquare_ProducesCorrectDimension()
+    {
+        // 2×3 matrix * Vector<Three> = Vector<Two>
+        // [1 2 3] * [1] = [1+4+9]  = [14]
+        // [4 5 6]   [2]   [4+10+18]  [32]
+        //           [3]
+        var matrix = CreateMatrix<Two, Three>(new double[2, 3]
+        {
+            { 1, 2, 3 },
+            { 4, 5, 6 }
+        });
+        var vector = CreateVector<Three>(1.0, 2.0, 3.0);
+
+        var result = matrix.Multiply(vector);
+
+        Assert.Equal(2, result.Length);
+        Assert.Equal(14.0, result[0].Match(v => v, _ => 0));
+        Assert.Equal(32.0, result[1].Match(v => v, _ => 0));
+    }
+
+    [Fact]
+    public void MultiplyVectorOperator_ProducesCorrectProduct()
+    {
+        var matrix = CreateMatrix<Two, Two>(new double[2, 2] { { 1, 2 }, { 3, 4 } });
+        var vector = CreateVector<Two>(2.0, 3.0);
+
+        var result = matrix * vector;
+
+        Assert.Equal(8.0, result[0].Match(v => v, _ => 0));
+        Assert.Equal(18.0, result[1].Match(v => v, _ => 0));
+    }
+
+    // -------------------------------------------------------------------------
     // Equals / GetHashCode / operators == and !=
     // -------------------------------------------------------------------------
 
@@ -384,5 +453,11 @@ public class MatrixTests
         where TColumns : Dimension
     {
         return Matrix.Create<TRows, TColumns>(values).Match(m => m, e => throw new InvalidOperationException(e));
+    }
+
+    private static Vector<TDimension> CreateVector<TDimension>(params double[] components)
+        where TDimension : Dimension
+    {
+        return Vector.Create<TDimension>(components).Match(v => v, e => throw new InvalidOperationException(e));
     }
 }
